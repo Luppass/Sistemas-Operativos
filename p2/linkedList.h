@@ -10,7 +10,7 @@ typedef struct node {
     int size;
     key_t key;
     time_t date;
-    char type[15]; // Command or memory node
+    char type[10]; // Command, malloc, mmap, shared
     char file[20];
     int fd;
     struct node * next;

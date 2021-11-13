@@ -26,8 +26,6 @@ Logins:
 #include <errno.h>
 #include <pwd.h>
 #include <grp.h>
-#include "linkedList.c"
-#include "main.h"
 #include "memory.c"
 
 #define MAX_CADENA 50
@@ -756,6 +754,9 @@ bool processComand(head_t * comandList, head_t * memoryList, char * petition){
         else if(strcmp(Command, "mmap") == 0){
             fun_mmap(argument, memoryList, aux);
         }
+        else if(strcmp(Command, "dealloc") == 0){
+            fun_dealloc(argument, memoryList, aux);
+        }
         else{
             fprintf(stderr, "Command: %s not found\n", Command);
         } 
@@ -773,14 +774,11 @@ int main(){
     bool end = false;
     
     while (!end){
-    
     prompt();
-
     fgets(petition, sizeof(petition), stdin);
-
     end = processComand(comandList, memoryList, petition);
-
     }
+
     removeList(&memoryList);
     removeList(&comandList);
     

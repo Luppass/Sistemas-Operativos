@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include <sys/shm.h>
 #include <errno.h>
 #include <sys/mman.h>
@@ -8,6 +9,8 @@
 #include <errno.h>
 #include <time.h>
 #include <sys/wait.h>
+#include "linkedList.c"
+#include "main.h"
 
 #define LEERCOMPLETO ((ssize_t)-1)
 
@@ -148,7 +151,10 @@ void fun_malloc(char * argmnt[], head_t * memoryList, int aux){
         }
         if (strcmp(argmnt[1], "-free") == 0){
             if (aux == 2) printList(memoryList, INT_MAX, "malloc");
-            else if (aux == 3 && atoi(argmnt[2])>0) deleteMemoryAtSize(memoryList, atoi(argmnt[2]));
+            
+            else if (aux == 3 && atoi(argmnt[2])>0){
+                deleteMemoryAtSize(memoryList, atoi(argmnt[2]));
+            } 
         }
 
     }
@@ -192,8 +198,6 @@ void fun_mmap(char *argmnt[], head_t * memoryList, int aux){ /*arg[0] is the fil
         }else{
             void * memdir = searchByFilename(memoryList, INT_MAX, argmnt[2]);
             if (memdir != NULL){
-                struct stat s;
-                stat(argmnt[2],&s);
                 deleteMemoryAtFilename(memoryList, argmnt[2]);
                 return;
             }
@@ -209,3 +213,29 @@ void fun_mmap(char *argmnt[], head_t * memoryList, int aux){ /*arg[0] is the fil
     else printf ("file %s mapped at %p\n", argmnt[1], p);
     }
 }
+
+void fun_dealloc(char * argmnt[], head_t * memoryList, int aux){
+    
+    if (aux == 1){
+        printList(memoryList, INT_MAX, "MALL");
+        return;
+    }else{
+
+        if(strcmp(argmnt[1], "-malloc") == 0 && atoi(argmnt[2]) > 0){
+            deleteMemoryAtSize(memoryList, atoi(argmnt[2]));
+            return;
+        }
+
+        if(strcmp(argmnt[1], "-mmap") == 0 && aux == 3){
+            deleteMemoryAtFilename(memoryList, argmnt[2]);     
+            return;
+        }
+    }
+    if (aux == 2){
+        deleteMemoryAtAdress(memoryList, argmnt[1]);
+    }
+    else printf("Arguments not allowed\n");
+}
+
+
+
