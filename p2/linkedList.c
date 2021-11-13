@@ -70,13 +70,13 @@ void printList (head_t * list, int items, char type[20]) {
 				printf ("%d) %s", index, (char *)lastNode->valor);			
 			}
 		}
-		if(strcmp(lastNode->type, "malloc") == 0 && strcmp(type, "malloc") == 0 && lastNode->size > 0 || (strcmp(type, "MALL") == 0 && lastNode->fd == 0)){
+		if(strcmp(lastNode->type, "malloc") == 0 && strcmp(type, "malloc") == 0 || (strcmp(type, "MALL") == 0 && strcmp(lastNode->type, "malloc") == 0)){
 			char date[25];
 			struct tm * tm = localtime(&(lastNode->date));
 			strftime(date, 100, "%c", tm);
 			printf("%p: size:%d. malloc  %s\n", lastNode->valor, lastNode->size, date);
 		}
-		if(strcmp(lastNode->type, "mmap") == 0 && strcmp(type, "mmap") == 0 || (strcmp(type, "MALL") == 0 && lastNode->fd!=0)){
+		else if(strcmp(lastNode->type, "mmap") == 0 && strcmp(type, "mmap") == 0 || (strcmp(type, "MALL") == 0 && (strcmp(lastNode->type, "mmap") == 0))){
 			char date[25];
 			struct tm * tm = localtime(&(lastNode->date));
 			strftime(date, 100, "%c", tm);
@@ -101,9 +101,10 @@ void deleteMemoryAtSize(head_t * list, int size){
 		if (before->size == size){
 			if (strcmp(before->type, "malloc") == 0){
 				printf("deallocated %d at %p\n", size, before->valor);
+				list->first = before->next;
 				free(before->valor);					
 				free(before);
-				before = before->next;
+				
 				return;
 			}
 		}
@@ -154,7 +155,7 @@ void deleteMemoryAtFilename(head_t * list, char file[20]){
 				printf("File %s unmapped at %p\n", before->file, before->valor);
 				munmap(before->valor, before->size);		
 				free(before);			
-				before = before->next;
+				list->first = before->next;
 				return;
 			}
 		}
@@ -207,17 +208,18 @@ void deleteMemoryAtAdress(head_t * list, char address[17]){
 
 		if (before->valor == p){
 			if (strcmp(before->type, "mmap") == 0){
+				list->first = before->next;
 				printf("File %s unmapped at %p\n", before->file, before->valor);
 				munmap(before->valor, before->size);		
 				free(before);			
-				before = before->next;
+				
 				return;
 			}
 			else if (strcmp(before->type, "malloc") == 0){
 				printf("deallocated %d at %p\n", before->size, before->valor);
+				list->first = before->next;
 				free(before->valor);					
 				free(before);
-				before = before->next;
 				return;
 			}
 		}
@@ -233,11 +235,12 @@ void deleteMemoryAtAdress(head_t * list, char address[17]){
 						before->next = NULL;
 						return;
 						}
-						else if (strcmp(after->type, "malloc") == 0){
+						else if(strcmp(after->type, "malloc") == 0){
 						printf("deallocated %d at %p\n", after->size, after->valor);
+						before->next = NULL;
 						free(after->valor);					
 						free(after);
-						before->next = NULL;
+						
 						return;
 						}
 					}
@@ -249,11 +252,11 @@ void deleteMemoryAtAdress(head_t * list, char address[17]){
 						before->next = after->next;
 						return;
 						}	
-						else if (strcmp(after->type, "malloc") == 0){
+						if (strcmp(after->type, "malloc") == 0){
 						printf("deallocated %d at %p\n", after->size, after->valor);
+						before->next = after->next;
 						free(after->valor);					
 						free(after);
-						before->next = after->next;
 						return;
 						}	
 					}
