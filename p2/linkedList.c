@@ -54,46 +54,39 @@ void Insert(head_t * list, void * valor, int size, key_t key, time_t date, char 
 }
 
 void printList (head_t * list, int items, char type[20]) {
-	 if (list->first == NULL) {
-	 	printf("\nEmpty list\n\n");
+	if (list->first == NULL) {
+		printf("\nEmpty list\n\n");
 		return;
-	 }
-	 node_t * lastNode = list->first;
-	 int index = 1;
+	}
+	node_t * lastNode = list->first;
+	int index = 1;
 	 
-	 printf("\n");
+	printf("\n");
 	
-	 while (lastNode != NULL && index < items + 1) {			
+	while (lastNode != NULL && index < items + 1) {			
 		
 		if(strcmp(type, "historial") == 0){
 			if (strcmp(lastNode->type, "historial") == 0){
 				printf ("%d) %s", index, (char *)lastNode->valor);			
 			}
 		}
-
-		if(strcmp(lastNode->type, "malloc") == 0 && strcmp(type, "malloc") == 0  || (strcmp(type, "MALL") == 0 && lastNode->fd == 0)){
+		if(strcmp(lastNode->type, "malloc") == 0 && strcmp(type, "malloc") == 0 && lastNode->size > 0 || (strcmp(type, "MALL") == 0 && lastNode->fd == 0)){
 			char date[25];
 			struct tm * tm = localtime(&(lastNode->date));
 			strftime(date, 100, "%c", tm);
 			printf("%p: size:%d. malloc  %s\n", lastNode->valor, lastNode->size, date);
 		}
-
 		if(strcmp(lastNode->type, "mmap") == 0 && strcmp(type, "mmap") == 0 || (strcmp(type, "MALL") == 0 && lastNode->fd!=0)){
 			char date[25];
 			struct tm * tm = localtime(&(lastNode->date));
 			strftime(date, 100, "%c", tm);
 			printf("%p: size:%d. mmap %s (fd:%d) %s\n", lastNode->valor, lastNode->size, lastNode->file, lastNode->fd, date);
 		}
-		
-		
 	lastNode = lastNode->next;							
 	index++;
 	}	
 	printf("\n");									
 }
-
-
-
 
 void deleteMemoryAtSize(head_t * list, int size){
 	if (list == NULL){
@@ -220,7 +213,7 @@ void deleteMemoryAtAdress(head_t * list, char address[17]){
 				before = before->next;
 				return;
 			}
-			if (strcmp(before->type, "malloc") == 0){
+			else if (strcmp(before->type, "malloc") == 0){
 				printf("deallocated %d at %p\n", before->size, before->valor);
 				free(before->valor);					
 				free(before);
@@ -240,7 +233,7 @@ void deleteMemoryAtAdress(head_t * list, char address[17]){
 						before->next = NULL;
 						return;
 						}
-						if (strcmp(after->type, "malloc") == 0){
+						else if (strcmp(after->type, "malloc") == 0){
 						printf("deallocated %d at %p\n", after->size, after->valor);
 						free(after->valor);					
 						free(after);
@@ -256,7 +249,7 @@ void deleteMemoryAtAdress(head_t * list, char address[17]){
 						before->next = after->next;
 						return;
 						}	
-						if (strcmp(after->type, "malloc") == 0){
+						else if (strcmp(after->type, "malloc") == 0){
 						printf("deallocated %d at %p\n", after->size, after->valor);
 						free(after->valor);					
 						free(after);
@@ -296,60 +289,60 @@ void * searchByFilename(head_t * list, int items, char file[20]) {
 }
 
 char * getNelement (head_t * list, int element) {
-	 if (list->first == NULL) return NULL;					
+	if (list->first == NULL) return NULL;					
 	 
-	 node_t * lastNode = list->first;
-	 int index = 0;
+	node_t * lastNode = list->first;
+	int index = 0;
 	 
-	 while (lastNode != NULL && index < element) {			
+	while (lastNode != NULL && index < element) {			
 		 lastNode = lastNode->next;								
 		 index++;											
-	 }
+	}
 	 
-	 if (lastNode != NULL)										 
+	if (lastNode != NULL)										 
 		return lastNode->valor;											
-	 else
+	else
 	 	return NULL;							
 }
  
 void clearList (head_t * list) {
-	 if (list == NULL) return;						
+	if (list == NULL) return;						
 	 
-	 node_t * lastNode = list->first;				
-	 node_t * tmp = NULL;							
+	node_t * lastNode = list->first;				
+	node_t * tmp = NULL;							
 	 
-	 while (lastNode->next != NULL) {				
-		 tmp = lastNode->next;						
-		 lastNode->next = lastNode->next->next;		
-		 free(tmp->valor);							
-		 free(tmp);									
-	 }
+	while (lastNode->next != NULL) {				
+		tmp = lastNode->next;						
+		lastNode->next = lastNode->next->next;		
+		free(tmp->valor);							
+		free(tmp);									
+	}
 	 
-	 if (lastNode != NULL) {						
-		 free(lastNode->valor);
-		 free(lastNode);
-	 }
-	 list->first = NULL;							
+	if (lastNode != NULL) {						
+		free(lastNode->valor);
+		free(lastNode);
+	}
+	list->first = NULL;							
 }
 
 void removeList (head_t ** list) {
-	 if (*list == NULL) return;						
+	if (*list == NULL) return;						
 	 
-	 node_t * lastNode = (*list)->first;
-	 node_t * tmp = NULL;
+	node_t * lastNode = (*list)->first;
+	node_t * tmp = NULL;
 	 
-	 while (lastNode->next != NULL) {					
-		 tmp = lastNode->next;							
-		 lastNode->next = lastNode->next->next;			
-		 free(tmp->valor);								
-		 free(tmp);										
-	 }
+	while (lastNode->next != NULL) {					
+		tmp = lastNode->next;							
+		lastNode->next = lastNode->next->next;			
+		free(tmp->valor);								
+		free(tmp);										
+	}
 	 
-	 if (lastNode != NULL){							
-		 free(lastNode->valor);
-		 free(lastNode);				
-	 }
-	 free(*list);							
+	if (lastNode != NULL){							
+		free(lastNode->valor);
+		free(lastNode);				
+	}
+	free(*list);							
 }
 
 

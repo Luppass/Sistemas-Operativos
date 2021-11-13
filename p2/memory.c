@@ -15,6 +15,9 @@
 #define LEERCOMPLETO ((ssize_t)-1)
 
 
+//*********************FUNCIONES AUXILIARES***********************************************************
+
+
 void * ObtenerMemoriaShmget (key_t clave, size_t tam){ /*Obtienen un puntero a una zaona de memoria compartida*/
 /*si tam >0 intenta crearla y si tam==0 asume que existe*/
     void * p;
@@ -132,7 +135,6 @@ void dopmap (void) /*no arguments necessary*/{
 }
 
 
-
 //*********************IMPLEMENTACIONES FUNCIONES***********************************************************
 
 void fun_malloc(char * argmnt[], head_t * memoryList, int aux){
@@ -156,7 +158,6 @@ void fun_malloc(char * argmnt[], head_t * memoryList, int aux){
                 deleteMemoryAtSize(memoryList, atoi(argmnt[2]));
             } 
         }
-
     }
 }
 
@@ -203,14 +204,14 @@ void fun_mmap(char *argmnt[], head_t * memoryList, int aux){ /*arg[0] is the fil
             }
         }
     }else{
-    if ((perm=argmnt[2])!=NULL && strlen(perm)<4) {
-        if (strchr(perm,'r')!=NULL) protection|=PROT_READ;
-        if (strchr(perm,'w')!=NULL) protection|=PROT_WRITE;
-        if (strchr(perm,'x')!=NULL) protection|=PROT_EXEC;
-    }
+        if ((perm=argmnt[2])!=NULL && strlen(perm)<4) {
+            if (strchr(perm,'r')!=NULL) protection|=PROT_READ;
+            if (strchr(perm,'w')!=NULL) protection|=PROT_WRITE;
+            if (strchr(perm,'x')!=NULL) protection|=PROT_EXEC;
+        }
 
     if ((p=MmapFichero(argmnt[1],protection, memoryList))==NULL) perror ("Imposible mapear fichero");
-    else printf ("file %s mapped at %p\n", argmnt[1], p);
+        else printf ("file %s mapped at %p\n", argmnt[1], p);
     }
 }
 
@@ -220,12 +221,10 @@ void fun_dealloc(char * argmnt[], head_t * memoryList, int aux){
         printList(memoryList, INT_MAX, "MALL");
         return;
     }else{
-
         if(strcmp(argmnt[1], "-malloc") == 0 && atoi(argmnt[2]) > 0){
             deleteMemoryAtSize(memoryList, atoi(argmnt[2]));
             return;
         }
-
         if(strcmp(argmnt[1], "-mmap") == 0 && aux == 3){
             deleteMemoryAtFilename(memoryList, argmnt[2]);     
             return;
@@ -236,6 +235,4 @@ void fun_dealloc(char * argmnt[], head_t * memoryList, int aux){
     }
     else printf("Arguments not allowed\n");
 }
-
-
 
