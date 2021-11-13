@@ -12,14 +12,16 @@ typedef struct node {
     time_t date;
     char type[15]; // Command or memory node
     char file[20];
+    int fd;
     struct node * next;
 }node_t;
 
 
+
 typedef struct head {
 	node_t * first;
-} head_t;
+}head_t;
 
-void printList (head_t * list, int items);
+void printList (head_t * list, int items, char type[20]);
 
 #endif

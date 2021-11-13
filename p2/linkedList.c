@@ -1,6 +1,8 @@
 
 #include "linkedList.h"
 #include <time.h>
+#include <limits.h>
+#include <sys/mman.h>
 
 
 void createList (head_t ** list) {
@@ -15,7 +17,7 @@ void createList (head_t ** list) {
  }
  
 
-void Insert(head_t * list, void * valor, int size, key_t key, time_t date, char type[15], char file[20]) {
+void Insert(head_t * list, void * valor, int size, key_t key, time_t date, char type[15], char file[20], int fd) {
 	if (list == NULL) return;												
 	 
 	if (list->first == NULL) {											
@@ -25,7 +27,7 @@ void Insert(head_t * list, void * valor, int size, key_t key, time_t date, char 
 		newNode->size = size;
 		strcpy(newNode->type, type);
 		strcpy(newNode->file, file);
-
+		newNode->fd = fd;
 		newNode->key = key;	
 		newNode->date = time(NULL);
 
@@ -44,12 +46,14 @@ void Insert(head_t * list, void * valor, int size, key_t key, time_t date, char 
 	newNode->size = size;
 	newNode->key = key;	
 	strcpy(newNode->type, type);
+	strcpy(newNode->file, file);
+	newNode->fd = fd;
 	newNode->date = time(NULL);											
 	newNode->valor = valor;	
 	lastNode->next = newNode;																		
 }
 
-void printList (head_t * list, int items) {
+void printList (head_t * list, int items, char type[20]) {
 	 if (list->first == NULL) {
 	 	printf("\nEmpty list\n\n");
 		return;
@@ -60,20 +64,25 @@ void printList (head_t * list, int items) {
 	 printf("\n");
 	
 	 while (lastNode != NULL && index < items + 1) {			
-		if(strcmp(lastNode->type, "historial") == 0){
-			printf ("%d) %s", index, (char *)lastNode->valor);			
+		
+		if(strcmp(type, "historial") == 0){
+			if (strcmp(lastNode->type, "historial") == 0){
+				printf ("%d) %s", index, (char *)lastNode->valor);			
+			}
 		}
-		if(strcmp(lastNode->type, "malloc") == 0){
+
+		if(strcmp(lastNode->type, "malloc") == 0 && strcmp(type, "malloc") == 0){
 			char date[25];
 			struct tm * tm = localtime(&(lastNode->date));
 			strftime(date, 100, "%c", tm);
 			printf("%p: size:%d. malloc  %s\n", lastNode->valor, lastNode->size, date);
 		}
-		if(strcmp(lastNode->type, "mmap") == 0){
+
+		if(strcmp(lastNode->type, "mmap") == 0 && strcmp(type, "mmap") == 0){
 			char date[25];
 			struct tm * tm = localtime(&(lastNode->date));
 			strftime(date, 100, "%c", tm);
-			printf("%p: size:%d. mmap %s\n", lastNode->valor, lastNode->size, lastNode->file, date);
+			printf("%p: size:%d. mmap %s (fd:%d) %s\n", lastNode->valor, lastNode->size, lastNode->file, lastNode->fd, date);
 		}
 		
 		
@@ -132,13 +141,82 @@ void deleteMemoryAtSize(head_t * list, int size){
 			before = before->next;
 			}
 			printf("No such block exists, printing the list of addresses alocated...\n");
-			printList(list, INT_MAX);
+			printList(list, INT_MAX, "malloc");
 		}
 	}
 }
 
+void deleteMemoryAtFilename(head_t * list, char file[20]){
+	if (list == NULL){
+		printf("No blocks of memory allocated\n");
+		return;
+	} 
 
+	else{
+		node_t * after = list->first;
+		node_t * before = list->first;
 
+		if (strcmp(before->file, file) == 0){
+			if (strcmp(before->type, "mmap") == 0){
+				printf("File %s unmapped at %p\n", before->file, before->valor);
+				munmap(before->valor, before->size);		
+				free(before);			
+				before = before->next;
+				return;
+			}
+		}
+		else{
+			after = after->next;
+			while(after != NULL){
+				if (strcmp(after->file, file) == 0){
+					if (after->next == NULL){
+						if (strcmp(after->type, "mmap") == 0){
+						printf("File %s unmapped at %p\n", after->file, after->valor);
+						before->next = NULL;
+						munmap(after->valor, after->size);
+						free(after);
+						return;
+						}
+					}
+					else{
+						if (strcmp(after->type, "mmap") == 0){
+						printf("File %s unmapped at %p\n", after->file, after->valor);
+						before->next = after->next;
+						munmap(after->valor, after->size);
+						free(after);
+						return;
+						}	
+					}
+				}
+			after = after->next;
+			before = before->next;
+			}
+			printf("File is not mapped or not specified, printing the list of files mapped...\n");
+			printList(list, INT_MAX, "mmap");
+		}
+	}
+}
+
+void * searchByFilename(head_t * list, int items, char file[20]) {
+	 if (list->first == NULL) {
+	 	printf("\nEmpty list\n\n");
+		return NULL;
+	 }
+
+	 node_t * lastNode = list->first;
+	 int index = 1;
+
+	while (lastNode != NULL && index < items + 1) {			
+		if(strcmp(lastNode->type, "mmap") == 0){
+			if (strcmp(file, lastNode->file) == 0){
+				return lastNode->valor;
+			}	
+		}
+	lastNode = lastNode->next;							
+	index++;
+	}
+	return NULL;	
+}
 
 char * getNelement (head_t * list, int element) {
 	 if (list->first == NULL) return NULL;					
@@ -156,9 +234,6 @@ char * getNelement (head_t * list, int element) {
 	 else
 	 	return NULL;							
 }
- 
-
-
  
 void clearList (head_t * list) {
 	 if (list == NULL) return;						

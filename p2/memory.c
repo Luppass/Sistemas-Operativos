@@ -66,29 +66,6 @@ void SharedCreate (char *arg[]) /*arg[0] is the keyand arg[1] is the size*/{
     else printf ("Memoria de shmget de clave %d asignada en %p\n",k,p);
 }
 
-
-void * MmapFichero (char * fichero, int protection){
-
-    int df, map=MAP_PRIVATE,modo=O_RDONLY;
-    struct stat s;
-    void *p;
-
-    if (protection&PROT_WRITE) modo=O_RDWR;
-
-    if (stat(fichero,&s)==-1 || (df=open(fichero, modo))==-1)
-        return NULL;
-
-    if ((p=mmap (NULL,s.st_size, protection,map,df,0))==MAP_FAILED)
-        return NULL;
-    
-
-    /*Guardar Direccion de Mmap (p, s.st_size,fichero,df......);*/
-    
-    return p;
-}
-
-
-
 #define LEERCOMPLETO ((ssize_t)-1)
     
 ssize_t LeerFichero (char *fich, void *p, ssize_t n){ /* le n bytes del fichero fich en p */
@@ -157,7 +134,7 @@ void dopmap (void) /*no arguments necessary*/{
 
 void fun_malloc(char * argmnt[], head_t * memoryList, int aux){
     
-    if (aux == 1) printList(memoryList, INT_MAX);
+    if (aux == 1) printList(memoryList, INT_MAX, "malloc");
     else{
         if (aux == 2){
             if (atoi(argmnt[1]) <= 0){
@@ -166,15 +143,36 @@ void fun_malloc(char * argmnt[], head_t * memoryList, int aux){
             else{
                 void * mem = malloc(atoi(argmnt[1]));
                 printf("allocated: %d size at %p\n", atoi(argmnt[1]), mem);
-                Insert(memoryList, mem, atoi(argmnt[1]), 0, 0, "malloc", "");
+                Insert(memoryList, mem, atoi(argmnt[1]), 0, 0, "malloc", "", 0);
             }
         }
         if (strcmp(argmnt[1], "-free") == 0){
-            if (aux == 2) printList(memoryList, INT_MAX);
+            if (aux == 2) printList(memoryList, INT_MAX, "malloc");
             else if (aux == 3 && atoi(argmnt[2])>0) deleteMemoryAtSize(memoryList, atoi(argmnt[2]));
         }
 
     }
+}
+
+
+void * MmapFichero (char fichero[20], int protection, head_t * memoryList){
+
+    int df, map=MAP_PRIVATE,modo=O_RDONLY;
+    struct stat s;
+    void *p;
+
+    if (protection&PROT_WRITE) modo=O_RDWR;
+
+    if (stat(fichero,&s)==-1 || (df=open(fichero, modo))==-1)
+        return NULL;
+
+    if ((p=mmap(NULL,s.st_size, protection,map,df,0))==MAP_FAILED)
+        return NULL;
+    
+    /*Guardar Direccion de Mmap (p, s.st_size,fichero,df......);*/
+    Insert(memoryList, p, s.st_size, 0, 0, "mmap", fichero, df);
+
+    return p;
 }
 
 void fun_mmap(char *argmnt[], head_t * memoryList, int aux){ /*arg[0] is the file name and arg[1] is the permissions*/
@@ -182,21 +180,32 @@ void fun_mmap(char *argmnt[], head_t * memoryList, int aux){ /*arg[0] is the fil
     char *perm;
     void *p;
     int protection=0;
-    
     if (aux == 1){ /*Listar Direcciones de Memoria mmap;*/ 
-        printList(memoryList, INT_MAX);
+        printList(memoryList, INT_MAX, "mmap");
         return;
     }
 
+    if (strcmp(argmnt[1], "-free") == 0){
+        if(aux == 2){
+            printList(memoryList, INT_MAX, "mmap");
+            return;
+        }else{
+            void * memdir = searchByFilename(memoryList, INT_MAX, argmnt[2]);
+            if (memdir != NULL){
+                struct stat s;
+                stat(argmnt[2],&s);
+                deleteMemoryAtFilename(memoryList, argmnt[2]);
+                return;
+            }
+        }
+    }else{
     if ((perm=argmnt[2])!=NULL && strlen(perm)<4) {
         if (strchr(perm,'r')!=NULL) protection|=PROT_READ;
         if (strchr(perm,'w')!=NULL) protection|=PROT_WRITE;
         if (strchr(perm,'x')!=NULL) protection|=PROT_EXEC;
     }
 
-    if ((p=MmapFichero(arg[1],protection))==NULL)
-        perror ("Imposible mapear fichero");
-    else
-        Insert(memoryList, p, atoi(argmnt[1]), 0, 0, "mmap", argmnt[1]);
-        printf ("file %s mapped at %p\n", argmnt[1], p);
+    if ((p=MmapFichero(argmnt[1],protection, memoryList))==NULL) perror ("Imposible mapear fichero");
+    else printf ("file %s mapped at %p\n", argmnt[1], p);
     }
+}

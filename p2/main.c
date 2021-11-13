@@ -210,13 +210,13 @@ void hist(char * argmnt[], head_t * comandList, int aux){
     }
     else{
     if (argmnt[1] == NULL){
-        printList(comandList, INT_MAX);
+        printList(comandList, INT_MAX, "historial");
     }
     else if (strcmp(argmnt[1], "-c") == 0){
         clearList(comandList);
     }
     else if (atoi(argmnt[1]+1) > 0){
-        printList(comandList, atoi(argmnt[1]+1));
+        printList(comandList, atoi(argmnt[1]+1), "historial");
     }
     else{
         printf("Invalid argument");
@@ -699,7 +699,7 @@ bool processComand(head_t * comandList, head_t * memoryList, char * petition){
     
     if (strcmp(petition, "comando") == 0 || strcmp(petition, "hist") == 0 || strcmp(petition, "\n")==0); // Evitar bucle infinito con command 
                                                                                                          // no registrar el comando hist/command y saltos de linea al ser llamado        
-    else Insert(comandList, (char *)petitionAux, 0, 0, 0, "historial");
+    else Insert(comandList, (char *)petitionAux, 0, 0, 0, "historial", "", 0);
 
     strcpy(Command, petition);
 
@@ -752,6 +752,9 @@ bool processComand(head_t * comandList, head_t * memoryList, char * petition){
         }
         else if(strcmp(Command, "malloc") == 0){
             fun_malloc(argument, memoryList, aux);
+        }
+        else if(strcmp(Command, "mmap") == 0){
+            fun_mmap(argument, memoryList, aux);
         }
         else{
             fprintf(stderr, "Command: %s not found\n", Command);
