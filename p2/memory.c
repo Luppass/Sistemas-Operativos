@@ -13,13 +13,14 @@
 #include "main.h"
 
 #define LEERCOMPLETO ((ssize_t)-1)
+#define MAX_CADENA 50
+#define MAX_DIR_SIZE 70
 
 
 //*********************FUNCIONES AUXILIARES***********************************************************
 
-
 void * ObtenerMemoriaShmget (key_t clave, size_t tam){ /*Obtienen un puntero a una zaona de memoria compartida*/
-/*si tam >0 intenta crearla y si tam==0 asume que existe*/
+                                                       /*si tam >0 intenta crearla y si tam==0 asume que existe*/
     void * p;
     int aux,id,flags=0777;
     struct shmid_ds s;
@@ -130,7 +131,6 @@ void dopmap (void) /*no arguments necessary*/{
             perror("cannot execute pmap");
             exit(1);
     }
-
     waitpid (pid,NULL,0);
 }
 
@@ -235,4 +235,86 @@ void fun_dealloc(char * argmnt[], head_t * memoryList, int aux){
     }
     else printf("Arguments not allowed\n");
 }
+
+void memoria_funcs(){
+        printf("\nAddress of function malloc() is :%p\n", fun_malloc);
+        printf("Address of function mmap() is :%p\n", fun_mmap);
+        printf("Address of function dealloc() is :%p\n\n", fun_dealloc);
+}
+
+void memoria_vars(){
+    node_t * newNode = (node_t *) malloc(sizeof(node_t));
+    static int a; static float b; static char c;
+    int d; float e; char f;
+
+    printf("Address of global variable struct node is : %p\n", &newNode);
+    printf("Address of global variable struct element 'valor' is : %p\n", &newNode->valor);
+    printf("Address of global variable struct element 'date' is : %p\n", &newNode->date);
+
+    printf("\nAddress of variable type static int 'a' is : %p\n", &a);
+    printf("Address of variable type static float 'b' is : %p\n", &b);
+    printf("Address of variable type static char 'c' is : %p\n", &c);
+
+    printf("\nAddress of variable type int 'a' is : %p\n", &d);
+    printf("Address of variable type float 'b' is : %p\n", &e);
+    printf("Address of variable type char 'c' is : %p\n", &f);
+}
+
+void fun_memoria(char * argmnt[], head_t * memorylist, int aux){
+    
+    bool BLOCKS = false, VARS = false, FUNCS = false,  ALL = false, PMAP = false;
+
+    for (int i = 1; i < aux; i++){
+        if(strcmp(argmnt[i], "-blocks") == 0) BLOCKS = true;
+        if(strcmp(argmnt[i], "-vars") == 0) VARS = true;
+        if(strcmp(argmnt[i], "-funcs") == 0) FUNCS = true;
+        if(strcmp(argmnt[i], "-all") == 0) ALL = true; BLOCKS = false; VARS = false; FUNCS = false;
+        if(strcmp(argmnt[i], "-pmap") == 0) PMAP = true;
+    }
+    
+    if (BLOCKS) printList(memorylist, INT_MAX, "MALL");
+
+    if (VARS) memoria_vars();
+    
+    if (FUNCS)memoria_funcs();
+
+    if (ALL){
+        printList(memorylist, INT_MAX, "MALL");
+        memoria_vars();
+        memoria_funcs();
+    }
+    if (PMAP){
+        printf("\n");
+        dopmap();
+        printf("\n");
+    }
+    
+}
+
+void fun_llenarmem(char * argmnt[], int aux){
+    
+    if (aux > 1){
+        
+        char byte ='A', i;
+        int cont = 128;
+        void *p = (void *)strtol(argmnt[1],NULL,16);
+        char * dir = (char *) p;
+
+        if(aux == 3){
+            cont = atoi(argmnt[2]);
+        }
+    
+        if(aux == 4){
+            byte = strtol(argmnt[3], NULL, 16);
+        }
+
+        for(i=0; i<cont; i++){
+            dir[i] = byte;
+        } 
+   
+    }else printf("Arguments not allowed, bad syntax");
+}
+
+    
+
 

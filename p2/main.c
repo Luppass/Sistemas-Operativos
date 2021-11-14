@@ -28,9 +28,6 @@ Logins:
 #include <grp.h>
 #include "memory.c"
 
-#define MAX_CADENA 50
-#define MAX_DIR_SIZE 70
-
 
 int CommandSplit(char * cadena, char * trozos[]) {
     
@@ -757,6 +754,11 @@ bool processComand(head_t * comandList, head_t * memoryList, char * petition){
         else if(strcmp(Command, "dealloc") == 0){
             fun_dealloc(argument, memoryList, aux);
         }
+        else if (strcmp(Command, "memoria") == 0){
+            fun_memoria(argument, memoryList, aux);
+        }
+        else if(strcmp(Command, "llenarmem") == 0)
+            fun_llenarmem(argument, aux);
         else{
             fprintf(stderr, "Command: %s not found\n", Command);
         } 
