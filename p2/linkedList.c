@@ -212,7 +212,6 @@ void deleteMemoryAtAdress(head_t * list, char address[17]){
 				printf("File %s unmapped at %p\n", before->file, before->valor);
 				munmap(before->valor, before->size);		
 				free(before);			
-				
 				return;
 			}
 			else if (strcmp(before->type, "malloc") == 0){

@@ -12,12 +12,31 @@
 #include "linkedList.c"
 #include "main.h"
 
+#define TAMANO 4096
 #define LEERCOMPLETO ((ssize_t)-1)
 #define MAX_CADENA 50
 #define MAX_DIR_SIZE 70
 
+//From: https://www.dc.fi.udc.es/~so-grado/2021-22/sources/MemoryZones.c
+char * arrayPunteros[]={"hola","buenos","dias","que","lo","disfrutes",NULL,NULL,NULL};
 
 //*********************FUNCIONES AUXILIARES***********************************************************
+
+void fun_recursiva (int n, int aux){
+
+    if (aux == 2){
+        char automatico[TAMANO];
+        static char estatico[TAMANO];
+        printf ("Parámetro n:%d en %p\n",n,&n);
+        printf ("Array estático en:%p \n",estatico);
+        printf ("Array automático en %p\n\n",automatico);
+        n--;
+        if (n>0) fun_recursiva(n, aux);
+    }
+    else printf("Invalid number of arguments");
+
+}
+
 
 void * ObtenerMemoriaShmget (key_t clave, size_t tam){ /*Obtienen un puntero a una zaona de memoria compartida*/
                                                        /*si tam >0 intenta crearla y si tam==0 asume que existe*/
@@ -243,13 +262,13 @@ void memoria_funcs(){
 }
 
 void memoria_vars(){
-    node_t * newNode = (node_t *) malloc(sizeof(node_t));
-    static int a; static float b; static char c;
-    int d; float e; char f;
 
-    printf("Address of global variable struct node is : %p\n", &newNode);
-    printf("Address of global variable struct element 'valor' is : %p\n", &newNode->valor);
-    printf("Address of global variable struct element 'date' is : %p\n", &newNode->date);
+    static int a = 1; static float b = 1.0; static char c = 'a';
+    int d = 2; float e = 2.0; char f = 'b';
+
+    printf("\nAddress of global variable initialized is : %p\n", arrayPunteros[0]);
+    printf("Address of global variable initialized is : %p\n", &arrayPunteros[1]);
+    printf("Address of global variable initialized is : %p\n", &arrayPunteros[4]);
 
     printf("\nAddress of variable type static int 'a' is : %p\n", &a);
     printf("Address of variable type static float 'b' is : %p\n", &b);
@@ -257,7 +276,7 @@ void memoria_vars(){
 
     printf("\nAddress of variable type int 'a' is : %p\n", &d);
     printf("Address of variable type float 'b' is : %p\n", &e);
-    printf("Address of variable type char 'c' is : %p\n", &f);
+    printf("Address of variable type char 'c' is : %p\n\n", &f);
 }
 
 void fun_memoria(char * argmnt[], head_t * memorylist, int aux){
@@ -268,15 +287,20 @@ void fun_memoria(char * argmnt[], head_t * memorylist, int aux){
         if(strcmp(argmnt[i], "-blocks") == 0) BLOCKS = true;
         if(strcmp(argmnt[i], "-vars") == 0) VARS = true;
         if(strcmp(argmnt[i], "-funcs") == 0) FUNCS = true;
-        if(strcmp(argmnt[i], "-all") == 0) ALL = true; BLOCKS = false; VARS = false; FUNCS = false;
+        if(strcmp(argmnt[i], "-all") == 0){
+            ALL = true; BLOCKS = false; VARS = false; FUNCS = false;
+        } 
         if(strcmp(argmnt[i], "-pmap") == 0) PMAP = true;
     }
     
     if (BLOCKS) printList(memorylist, INT_MAX, "MALL");
 
-    if (VARS) memoria_vars();
-    
-    if (FUNCS)memoria_funcs();
+    if (VARS){
+        memoria_vars();
+    }
+    if (FUNCS){
+        memoria_funcs();
+    } 
 
     if (ALL){
         printList(memorylist, INT_MAX, "MALL");
@@ -288,26 +312,20 @@ void fun_memoria(char * argmnt[], head_t * memorylist, int aux){
         dopmap();
         printf("\n");
     }
-    
 }
 
 void fun_llenarmem(char * argmnt[], int aux){
-    
-    if (aux > 1){
-        
+
+        if (aux > 1){
         char byte ='A', i;
         int cont = 128;
         void *p = (void *)strtol(argmnt[1],NULL,16);
         char * dir = (char *) p;
 
-        if(aux == 3){
-            cont = atoi(argmnt[2]);
-        }
-    
-        if(aux == 4){
-            byte = strtol(argmnt[3], NULL, 16);
-        }
+        if(aux == 3) cont = atoi(argmnt[2]);
 
+        if(aux == 4) byte = strtol(argmnt[3], NULL, 16);
+        
         for(i=0; i<cont; i++){
             dir[i] = byte;
         } 

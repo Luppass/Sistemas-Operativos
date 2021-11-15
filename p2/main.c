@@ -757,8 +757,12 @@ bool processComand(head_t * comandList, head_t * memoryList, char * petition){
         else if (strcmp(Command, "memoria") == 0){
             fun_memoria(argument, memoryList, aux);
         }
-        else if(strcmp(Command, "llenarmem") == 0)
+        else if(strcmp(Command, "llenarmem") == 0){
             fun_llenarmem(argument, aux);
+        }
+        else if(strcmp(Command, "recursiva") == 0){
+            fun_recursiva(atoi(argument[1]), aux);
+        }
         else{
             fprintf(stderr, "Command: %s not found\n", Command);
         } 
