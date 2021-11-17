@@ -30,10 +30,7 @@ void Insert(head_t * list, void * valor, int size, key_t key, time_t date, char 
 		newNode->fd = fd;
 		newNode->key = key;	
 		newNode->date = time(NULL);
-
-		if (strcmp(type, "historial") == 0) strcpy(newNode->valor, valor);
-		else newNode->valor = valor;	
-										
+		newNode->valor=strdup(valor);							
 		return;																																
 	}
 	node_t * lastNode = list->first;
@@ -48,8 +45,8 @@ void Insert(head_t * list, void * valor, int size, key_t key, time_t date, char 
 	strcpy(newNode->type, type);
 	strcpy(newNode->file, file);
 	newNode->fd = fd;
-	newNode->date = time(NULL);											
-	newNode->valor = valor;	
+	newNode->date = time(NULL);												
+	newNode->valor=strdup(valor);	
 	lastNode->next = newNode;																		
 }
 

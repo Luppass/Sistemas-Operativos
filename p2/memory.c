@@ -158,6 +158,7 @@ void dopmap (void) /*no arguments necessary*/{
 
 void fun_malloc(char * argmnt[], head_t * memoryList, int aux){
     
+    
     if (aux == 1) printList(memoryList, INT_MAX, "malloc");
     else{
         if (aux == 2){
@@ -266,7 +267,7 @@ void memoria_vars(){
     static int a = 1; static float b = 1.0; static char c = 'a';
     int d = 2; float e = 2.0; char f = 'b';
 
-    printf("\nAddress of global variable initialized is : %p\n", arrayPunteros[0]);
+    printf("\nAddress of global variable initialized is : %p\n", &arrayPunteros);
     printf("Address of global variable initialized is : %p\n", &arrayPunteros[1]);
     printf("Address of global variable initialized is : %p\n", &arrayPunteros[4]);
 
@@ -283,6 +284,11 @@ void fun_memoria(char * argmnt[], head_t * memorylist, int aux){
     
     bool BLOCKS = false, VARS = false, FUNCS = false,  ALL = false, PMAP = false;
 
+    if (aux == 1){
+        memoria_vars();
+        return;
+    }else{
+    
     for (int i = 1; i < aux; i++){
         if(strcmp(argmnt[i], "-blocks") == 0) BLOCKS = true;
         if(strcmp(argmnt[i], "-vars") == 0) VARS = true;
@@ -293,44 +299,57 @@ void fun_memoria(char * argmnt[], head_t * memorylist, int aux){
         if(strcmp(argmnt[i], "-pmap") == 0) PMAP = true;
     }
     
-    if (BLOCKS) printList(memorylist, INT_MAX, "MALL");
+    if (BLOCKS){
+        printList(memorylist, INT_MAX, "MALL"); 
+        return;
+    } 
 
     if (VARS){
         memoria_vars();
+        return;
     }
     if (FUNCS){
         memoria_funcs();
+        return;
     } 
 
     if (ALL){
         printList(memorylist, INT_MAX, "MALL");
         memoria_vars();
         memoria_funcs();
+        return;
     }
     if (PMAP){
         printf("\n");
         dopmap();
         printf("\n");
+        return;
+    }
+
+    printf("Arguments not allowed, bad syntax\n");
+    
     }
 }
 
 void fun_llenarmem(char * argmnt[], int aux){
 
         if (aux > 1){
-        char byte ='A', i;
+        
+        char byte ='A';
         int cont = 128;
-        void *p = (void *)strtol(argmnt[1],NULL,16);
+        void *p = strdup(argmnt[1]);
+
         char * dir = (char *) p;
 
         if(aux == 3) cont = atoi(argmnt[2]);
-
+        
         if(aux == 4) byte = strtol(argmnt[3], NULL, 16);
         
-        for(i=0; i<cont; i++){
+        for(int i=0; i<cont ; i++){
             dir[i] = byte;
         } 
    
-    }else printf("Arguments not allowed, bad syntax");
+    }else printf("Arguments not allowed, bad syntax\n");
 }
 
     
