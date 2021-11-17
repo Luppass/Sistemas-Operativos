@@ -751,6 +751,9 @@ bool processComand(head_t * comandList, head_t * memoryList, char * petition){
         else if(strcmp(Command, "mmap") == 0){
             fun_mmap(argument, memoryList, aux);
         }
+        else if(strcmp(Command, "shared") == 0){
+            fun_shared(argument, memoryList, aux);
+        }
         else if(strcmp(Command, "dealloc") == 0){
             fun_dealloc(argument, memoryList, aux);
         }

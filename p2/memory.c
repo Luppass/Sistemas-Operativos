@@ -37,9 +37,8 @@ void fun_recursiva (int n, int aux){
 
 }
 
-
-void * ObtenerMemoriaShmget (key_t clave, size_t tam){ /*Obtienen un puntero a una zaona de memoria compartida*/
-                                                       /*si tam >0 intenta crearla y si tam==0 asume que existe*/
+void * ObtenerMemoriaShmget (key_t clave, size_t tam, head_t * memoryList){ /*Obtienen un puntero a una zaona de memoria compartida*/
+/*si tam >0 intenta crearla y si tam==0 asume que existe*/
     void * p;
     int aux,id,flags=0777;
     struct shmid_ds s;
@@ -51,9 +50,9 @@ void * ObtenerMemoriaShmget (key_t clave, size_t tam){ /*Obtienen un puntero a u
         errno=EINVAL; return NULL;
         }
     
-    if ((id=shmget(clave, tam, flags))==-1)
-
-    return (NULL);
+    if ((id=shmget(clave, tam, flags))==-1) {
+        return (NULL);
+    }
     
     if ((p=shmat(id,NULL,0))==(void*) -1){
     
@@ -68,16 +67,18 @@ void * ObtenerMemoriaShmget (key_t clave, size_t tam){ /*Obtienen un puntero a u
 }
     shmctl (id,IPC_STAT,&s);
     /* Guardar En Direcciones de Memoria Shared (p, s.shm_segsz, clave.....);*/
+    Insert(memoryList, p, s.shm_segsz, clave, 0, "shared", "", 0);
     return (p);
 }
 
 
-void SharedCreate (char *arg[]) /*arg[0] is the keyand arg[1] is the size*/{
+void SharedCreate (char *arg[], head_t * memoryList) /*arg[0] is the key and arg[1] is the size*/{
     key_t k;
     size_t tam=0;
     void *p;
 
-    if (arg[0]==NULL || arg[1]==NULL) {/*Listar Direcciones de Memoria Shared */ 
+    if (arg[0]==NULL || arg[1]==NULL) {
+        printList(memoryList, INT_MAX, "shared");
         return;
     }
     
@@ -86,10 +87,32 @@ void SharedCreate (char *arg[]) /*arg[0] is the keyand arg[1] is the size*/{
     if (arg[1]!=NULL)
         tam=(size_t) atoll(arg[1]);
 
-    if ((p=ObtenerMemoriaShmget(k,tam))==NULL)
+    if ((p=ObtenerMemoriaShmget(k,tam, memoryList))==NULL)
         perror ("Imposible obtener memoria shmget");
     
-    else printf ("Memoria de shmget de clave %d asignada en %p\n",k,p);
+    else {
+        printf ("Memoria de shmget de clave %d asignada en %p\n",k,p);
+    }
+}
+
+void AllocateShared (char *arg[], head_t * memoryList) {
+    key_t k;
+    size_t tam=0;
+    void *p;
+
+    if (arg[0]==NULL) {
+        printList(memoryList, INT_MAX, "shared");
+        return;
+    }
+    
+    k=(key_t) atoi(arg[0]);
+
+    if ((p=ObtenerMemoriaShmget(k,tam, memoryList))==NULL)
+        perror ("Imposible obtener memoria shmget");
+    
+    else {
+        printf ("Memoria de shmget de clave %d asignada en %p\n",k,p);
+    }
 }
 
 #define LEERCOMPLETO ((ssize_t)-1)
@@ -181,27 +204,6 @@ void fun_malloc(char * argmnt[], head_t * memoryList, int aux){
     }
 }
 
-
-void * MmapFichero (char fichero[20], int protection, head_t * memoryList){
-
-    int df, map=MAP_PRIVATE,modo=O_RDONLY;
-    struct stat s;
-    void *p;
-
-    if (protection&PROT_WRITE) modo=O_RDWR;
-
-    if (stat(fichero,&s)==-1 || (df=open(fichero, modo))==-1)
-        return NULL;
-
-    if ((p=mmap(NULL,s.st_size, protection,map,df,0))==MAP_FAILED)
-        return NULL;
-    
-    /*Guardar Direccion de Mmap (p, s.st_size,fichero,df......);*/
-    Insert(memoryList, p, s.st_size, 0, 0, "mmap", fichero, df);
-
-    return p;
-}
-
 void fun_mmap(char *argmnt[], head_t * memoryList, int aux){ /*arg[0] is the file name and arg[1] is the permissions*/
 
     char *perm;
@@ -244,6 +246,29 @@ void fun_mmap(char *argmnt[], head_t * memoryList, int aux){ /*arg[0] is the fil
     
 }
 
+void fun_shared(char *argmnt[], head_t * memoryList, int aux){
+    int key, size;
+    void *p;
+
+    if (aux == 1) {printList(memoryList, INT_MAX, "shared"); return;}
+
+    if (strcmp(argmnt[1], "-create") == 0){
+        if (aux == 2) {printList(memoryList, INT_MAX, "shared");}
+        else {SharedCreate(argmnt+2, memoryList);}
+
+    }else if (strcmp(argmnt[1], "-free") == 0){
+        if (aux == 2) {printList(memoryList, INT_MAX, "shared");}
+        else {deleteMemoryAtKey(memoryList, (key_t) atoi(argmnt[2]));}
+
+    }else if (strcmp(argmnt[1], "-delkey") == 0){
+        if (aux == 2) {printList(memoryList, INT_MAX, "shared");}
+        else {SharedDelkey(argmnt+2);}
+
+    } else {
+        AllocateShared(argmnt+1, memoryList);
+    }
+}
+
 void fun_dealloc(char * argmnt[], head_t * memoryList, int aux){
     
     if (aux == 1){
@@ -258,6 +283,11 @@ void fun_dealloc(char * argmnt[], head_t * memoryList, int aux){
             deleteMemoryAtFilename(memoryList, argmnt[2]);     
             return;
         }
+        if(strcmp(argmnt[1], "-shared") == 0 && aux == 3){
+            deleteMemoryAtKey(memoryList, (key_t) atoi(argmnt[2]));     
+            return;
+        }
+
     }
     if (aux == 2){
         deleteMemoryAtAdress(memoryList, argmnt[1]);
@@ -351,6 +381,7 @@ void fun_llenarmem(char * argmnt[], int aux){
         char * dir = (char *) p;
 
         if(aux == 3) cont = atoi(argmnt[2]);
+        
         if(aux == 4) byte = strtol(argmnt[3], NULL, 16);
         
         for(int i=0; i<cont ; i++){

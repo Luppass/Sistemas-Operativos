@@ -79,10 +79,60 @@ void printList (head_t * list, int items, char type[20]) {
 			strftime(date, 100, "%c", tm);
 			printf("%p: size:%d. mmap %s (fd:%d) %s\n", lastNode->valor, lastNode->size, lastNode->file, lastNode->fd, date);
 		}
+		else if (strcmp(lastNode->type, "shared") == 0 && strcmp(type, "shared") == 0 || (strcmp(type, "MALL") == 0 && (strcmp(lastNode->type, "shared") == 0))){
+			char date[25];
+			struct tm * tm = localtime(&(lastNode->date));
+			strftime(date, 100, "%c", tm);
+			printf("%p: size:%d. key:%d. shared %s\n", lastNode->valor, lastNode->size, lastNode->key, date);
+		}
 	lastNode = lastNode->next;							
 	index++;
 	}	
 	printf("\n");									
+}
+
+void deleteNode (node_t ** node) {
+	if(strcmp((*node)->type, "malloc") == 0) {
+		free((*node)->valor);
+	} else if(strcmp((*node)->type, "shared") == 0) {
+		shmdt((*node)->valor);
+	}
+	free(*node);
+}
+
+int deleteMemoryAtKey(head_t ** list, key_t key) {
+	if(*list!=NULL) {
+		node_t * aux = *list;
+		if(aux->key == key) {
+			*list = aux->next;
+			printf("adress %p deallocated (%s)\n", aux->valor, aux->type);
+			deleteNode(&aux);
+			return 0;
+		} else {
+			node_t * prev = *list;
+			aux = aux->next;
+			while(aux!=NULL) {
+				if(aux->key == key) {
+					if(aux->next == NULL){
+						prev->next = NULL;
+						printf("adress %p deallocated (%s)\n", aux->valor, aux->type);
+						deleteNode(&aux);
+					} else {
+						prev->next = aux->next;
+						printf("adress %p deallocated (%s)\n", aux->valor, aux->type);
+						deleteNode(&aux);
+					}
+					return 0;
+				}
+				aux = aux->next;
+				prev = prev->next;
+			}
+			printf("key %d does not exist\n", key);
+			return 1;
+		}
+	}
+	printf("No memory reserved\n");
+	return 1;
 }
 
 void deleteMemoryAtSize(head_t * list, int size){
