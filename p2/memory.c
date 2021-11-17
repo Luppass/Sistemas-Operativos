@@ -222,17 +222,26 @@ void fun_mmap(char *argmnt[], head_t * memoryList, int aux){ /*arg[0] is the fil
                 deleteMemoryAtFilename(memoryList, argmnt[2]);
                 return;
             }
+            printf("File do not exist or its not mapped on memory\nPrinting the list of addresses allocated with mmap...\n");
+            printList(memoryList, INT_MAX, "mmap");
+            return;
         }
-    }else{
-        if ((perm=argmnt[2])!=NULL && strlen(perm)<4) {
-            if (strchr(perm,'r')!=NULL) protection|=PROT_READ;
-            if (strchr(perm,'w')!=NULL) protection|=PROT_WRITE;
-            if (strchr(perm,'x')!=NULL) protection|=PROT_EXEC;
-        }
+    }
+
+    if (aux == 3){
+    
+    if ((perm=argmnt[2])!=NULL && strlen(perm)<4) {
+        if (strchr(perm,'r')!=NULL) protection|=PROT_READ;
+        if (strchr(perm,'w')!=NULL) protection|=PROT_WRITE;
+        if (strchr(perm,'x')!=NULL) protection|=PROT_EXEC;
+    }
 
     if ((p=MmapFichero(argmnt[1],protection, memoryList))==NULL) perror ("Imposible mapear fichero");
         else printf ("file %s mapped at %p\n", argmnt[1], p);
-    }
+
+
+    }else printf("Invalid arguments\n");
+    
 }
 
 void fun_dealloc(char * argmnt[], head_t * memoryList, int aux){
@@ -342,7 +351,6 @@ void fun_llenarmem(char * argmnt[], int aux){
         char * dir = (char *) p;
 
         if(aux == 3) cont = atoi(argmnt[2]);
-        
         if(aux == 4) byte = strtol(argmnt[3], NULL, 16);
         
         for(int i=0; i<cont ; i++){
