@@ -100,39 +100,45 @@ void deleteNode (node_t ** node) {
 	free(*node);
 }
 
-int deleteMemoryAtKey(head_t ** list, key_t key) {
-	if(*list!=NULL) {
-		node_t * aux = *list;
+void deleteMemoryAtKey(head_t * list, key_t key) {
+	if(list!=NULL) {
+		node_t * aux = list->first;
+		node_t * prev = list->first;
+		
 		if(aux->key == key) {
-			*list = aux->next;
+			list->first = aux->next;
 			printf("adress %p deallocated (%s)\n", aux->valor, aux->type);
-			deleteNode(&aux);
-			return 0;
+			shmdt(aux->valor);
+			free(aux);
+			return;
 		} else {
-			node_t * prev = *list;
 			aux = aux->next;
 			while(aux!=NULL) {
-				if(aux->key == key) {
+				if(aux->key == key && strcmp(aux->type, "shared") == 0) {
 					if(aux->next == NULL){
 						prev->next = NULL;
-						printf("adress %p deallocated (%s)\n", aux->valor, aux->type);
-						deleteNode(&aux);
+						printf("address %p deallocated (%s)\n", aux->valor, aux->type);
+						shmdt(aux->valor);
+						free(aux);
+						return;
 					} else {
+						if (strcmp(aux->type, "shared") == 0){
 						prev->next = aux->next;
-						printf("adress %p deallocated (%s)\n", aux->valor, aux->type);
-						deleteNode(&aux);
+						printf("address %p deallocated (%s)\n", aux->valor, aux->type);
+						shmdt(aux->valor);
+						free(aux);
+						return;
+						}						
 					}
-					return 0;
 				}
 				aux = aux->next;
 				prev = prev->next;
 			}
 			printf("key %d does not exist\n", key);
-			return 1;
+			return;
 		}
 	}
 	printf("No memory reserved\n");
-	return 1;
 }
 
 void deleteMemoryAtSize(head_t * list, int size){

@@ -415,13 +415,14 @@ void fun_volcarmem(char * argmnt[], int aux){
 
     if(aux > 1){
 
-        void *p = strdup(argmnt[1]);
+        void * p = strdup(argmnt[1]);
         int cont = 25;
         int col;
         int i = 0;
         int j = 0;
 
-        char * fila1 = (char *) fila1;
+        char * fila1 = (char *) p;
+
         unsigned int fila2;
 
         if(aux > 2) {
