@@ -465,33 +465,23 @@ void listdir(char * argmnt[], int aux) {
             link=true;
             linkCnt++;
             optCnt++;
-        }
-
-        if (strcmp(argmnt[i], "-hid") == 0) {
+        }else if (strcmp(argmnt[i], "-hid") == 0) {
             hid=true;
             hidCnt++;
             optCnt++;
-        }
-
-        if (strcmp(argmnt[i], "-long") == 0) {
+        }else if (strcmp(argmnt[i], "-long") == 0) {
             longOpt=true;
             longCnt++;
             optCnt++;
-        }
-
-        if (strcmp(argmnt[i], "-acc") == 0) {
+        }else if (strcmp(argmnt[i], "-acc") == 0) {
             acc = true;
             accCnt++;
             optCnt++;
-        }
-
-        if (strcmp(argmnt[i], "-reca") == 0) {
+        }else if (strcmp(argmnt[i], "-reca") == 0) {
             reca=true;
             recaCnt++;
             optCnt++;
-        }
-
-        if (strcmp(argmnt[i], "-recb") == 0) {
+        }else if (strcmp(argmnt[i], "-recb") == 0) {
             recb=true;
             recbCnt++;
             optCnt++;
@@ -763,8 +753,17 @@ bool processComand(head_t * comandList, head_t * memoryList, char * petition){
         else if(strcmp(Command, "llenarmem") == 0){
             fun_llenarmem(argument, aux);
         }
+        else if(strcmp(Command, "volcarmem") == 0){
+            fun_volcarmem(argument, aux);
+        }
         else if(strcmp(Command, "recursiva") == 0){
             fun_recursiva(atoi(argument[1]), aux);
+        }
+        else if((strcmp(Command, "e-s") == 0) && (strcmp(argument[1], "read") == 0)){
+            fun_esread(argument+1, aux);
+        }
+        else if((strcmp(Command, "e-s") == 0) && (strcmp(argument[1], "write") == 0)){
+            fun_eswrite(argument+1, aux);
         }
         else{
             fprintf(stderr, "Command: %s not found\n", Command);

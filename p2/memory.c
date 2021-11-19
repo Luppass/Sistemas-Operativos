@@ -204,6 +204,26 @@ void fun_malloc(char * argmnt[], head_t * memoryList, int aux){
     }
 }
 
+void * MmapFichero (char fichero[20], int protection, head_t * memoryList){
+
+    int df, map=MAP_PRIVATE,modo=O_RDONLY;
+    struct stat s;
+    void *p;
+
+    if (protection&PROT_WRITE) modo=O_RDWR;
+
+    if (stat(fichero,&s)==-1 || (df=open(fichero, modo))==-1)
+        return NULL;
+
+    if ((p=mmap(NULL,s.st_size, protection,map,df,0))==MAP_FAILED)
+        return NULL;
+    
+    /*Guardar Direccion de Mmap (p, s.st_size,fichero,df......);*/
+    Insert(memoryList, p, s.st_size, 0, 0, "mmap", fichero, df);
+
+    return p;
+}
+
 void fun_mmap(char *argmnt[], head_t * memoryList, int aux){ /*arg[0] is the file name and arg[1] is the permissions*/
 
     char *perm;
@@ -391,6 +411,129 @@ void fun_llenarmem(char * argmnt[], int aux){
     }else printf("Arguments not allowed, bad syntax\n");
 }
 
+void fun_volcarmem(char * argmnt[], int aux){
+
+    if(aux > 1){
+
+        void *p = strdup(argmnt[1]);
+        int cont = 25;
+        int col;
+        int i = 0;
+        int j = 0;
+
+        char * fila1 = (char *) fila1;
+        unsigned int fila2;
+
+        if(aux > 2) {
+            cont = atoi(argmnt[2]);
+        }
+
+        while(i<cont) {
+            for(col=0; (col<25) && (i<cont); i++, col++) {
+                if(isprint(fila1[i])) {
+                    printf("%3c", fila1[i]);
+                } else {
+                    printf("  ");
+                }
+            }
+            printf("\n");
+
+            for(col=0; (col<25) && (j<cont); j++, col++) {
+                fila2 = *((unsigned char *) &fila1[j]);
+                printf(" %.2x", fila2);
+            }
+            printf("\n");
+        }
+
+    }else printf("More arguments needed for command 'volcarmem'\n");
+}
+
+int ReadFile (int bytes, void *p, char *fich) {
+    int file = open(fich, O_RDONLY);
+    int r, size = bytes;
+    struct stat s;
+
+    if ((stat(fich, &s) == -1) || (file==-1)) {
+        return -1;
+    }
+
+    if(bytes==-1) {size = s.st_size;}               //Lee todo el fichero
+
+    r = read(file, p, size);
+    close(file);
+    return r;
+}
+
+void fun_esread(char * argmnt[], int aux) {
+    if (aux > 2) {
+        int cont = -1;
+        int rd;
+        void * addr = (void *) strtoul(argmnt[2], NULL, 16);
+        if(aux == 4) {cont = atoi(argmnt[3]);}
+        if((rd=ReadFile(cont, addr, argmnt[1])) != -1) {
+            printf("%d bytes readed from the file %s in %p\n", ReadFile(cont, addr, argmnt[1]), argmnt[1], addr);
+        } else {
+            printf("Cant read the file\n");
+        }
+
+    } else {
+        printf("More arguments needed\n");
+    }
+}
+
+int WriteFile(char *fich, void *p, int bytes) {
+    int file = open(fich, O_WRONLY);
+    int w, size = bytes;
+    struct stat s;
+
+    if ((stat(fich, &s) == -1) || (file==-1)) {return -1;}
+
+    if(bytes==-1) {size = s.st_size;}               //Lee todo el fichero
+
+    if((w = write(file, p, size)) == -1) {return -1;}
+
+    close(file);
+    return w;
     
+}
 
+void fun_eswrite(char *argmnt[], int aux) {
+    if (aux > 3) {
+        int wr;
+        void * addr;
+        int cont;
+        bool ow=false;
+        if(strcmp(argmnt[1], "-o") == 0) {
+            ow=true;
+        }
+        if(ow) {
+            addr = (void *) strtoul(argmnt[3], NULL, 16);
+            cont = atoi(argmnt[4]);
 
+            if((wr=WriteFile(argmnt[1], addr, cont)) != -1) {
+                printf("%d bytes writed from %p in the file %s\n", ReadFile(cont, addr, argmnt[1]), addr, argmnt[1]);
+            } else {
+                printf("Cant write the file\n");
+            }              
+        } else {
+            addr = (void *) strtoul(argmnt[2], NULL, 16);
+            cont = atoi(argmnt[3]);
+
+            if(access(argmnt[1], F_OK) == 0) {
+                printf("Cant write %s: File already exists\n");
+            } else {
+                FILE *newFile;
+                newFile = fopen(argmnt[1], "w");
+
+                if((wr=WriteFile(argmnt[1], addr, cont)) != -1) {
+                    printf("%d bytes writed from %p in the file %s\n", ReadFile(cont, addr, argmnt[1]), addr, argmnt[1]);
+                } else {
+                    printf("Cant write the file\n");
+                }
+
+            }
+        }
+    } else {
+        printf("More arguments needed\n");
+    }
+}
