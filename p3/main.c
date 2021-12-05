@@ -221,7 +221,7 @@ void hist(char * argmnt[], head_t * comandList, int aux){
     }
 }
 
-void comando(char * argmnt[], head_t * comandList, int aux){
+void comando(char * argmnt[], head_t * comandList, int aux, char * env[]){
     
     if(aux > 2){
         printf("Invalid number of arguments");
@@ -234,7 +234,7 @@ void comando(char * argmnt[], head_t * comandList, int aux){
     }
     else if (atoi(argmnt[1]) > 0){
         strcpy(aux, getNelement(comandList, atoi(argmnt[1]) - 1));
-        processComand(comandList, NULL,aux);
+        processComand(comandList, NULL, aux, env);
         printf("\n");
     }
     else perror("Invalid argument");
@@ -679,7 +679,7 @@ void listfich(char *argmnt[], int aux){
 }
 
 */
-bool processComand(head_t * comandList, head_t * memoryList, char * petition){
+bool processComand(head_t * comandList, head_t * memoryList, char * petition, char * env[]){
     
     time_t t = time(NULL);
     struct tm tm = *localtime(&t);
@@ -727,7 +727,7 @@ bool processComand(head_t * comandList, head_t * memoryList, char * petition){
             hist(argument, comandList, aux);
         }
         else if (strcmp(Command, "comando") == 0){
-            comando(argument, comandList, aux);
+            comando(argument, comandList, aux, env);
         }
         else if (strcmp(Command, "crear") == 0){
             crear(argument, aux);
@@ -781,6 +781,15 @@ bool processComand(head_t * comandList, head_t * memoryList, char * petition){
         else if((strcmp(Command, "priority") == 0)){
             fun_priority(argument, aux);
         }
+        else if((strcmp(Command, "entorno") == 0)){
+            fun_entorno(argument, aux, env);
+        }
+        else if((strcmp(Command, "mostrarvar") == 0)){
+            fun_mostrarvar(argument, aux, env);
+        }
+        else if((strcmp(Command, "cambiarvar") == 0)){
+            fun_cambiarvar(argument, aux, env);
+        }
         else{
             fprintf(stderr, "Command: %s not found\n", Command);
         }
@@ -788,7 +797,7 @@ bool processComand(head_t * comandList, head_t * memoryList, char * petition){
     return false;
 }
 
-int main(){
+int main(int argc, char * argv[], char * env[]){
 
     char petition[MAX_CADENA];
     head_t * comandList = NULL;
@@ -800,7 +809,7 @@ int main(){
     while (!end){
     prompt();
     fgets(petition, sizeof(petition), stdin);
-    end = processComand(comandList, memoryList, petition);
+    end = processComand(comandList, memoryList, petition, env);
     }
 
     removeList(&memoryList);

@@ -9,6 +9,7 @@
 #include "linkedList.h"
 #include "main.h"
 
+#define MAXVAR 2000 //Borrar, solo para hacer prueba
 /******************************SENALES ******************************************/
 struct SEN{
         char *nombre;
@@ -87,6 +88,8 @@ static struct SEN sigstrnum[]={
         NULL,-1,
 }; /*fin array sigstrnum*/
 
+extern char ** environ;
+
 int Senal(char * sen) {
         int i;
     for (i=0; sigstrnum[i].nombre!=NULL; i++)
@@ -154,10 +157,6 @@ void fun_uid(char * argmnt[], int aux) {
         }
 }
 
-void fun_entorno(char * argmnt[], int aux) {
-        
-}
-
 void fun_priority(char * argmnt[], int aux) {
         int which = PRIO_PROCESS;
         int prio;
@@ -186,6 +185,100 @@ void fun_priority(char * argmnt[], int aux) {
                                 printf("Imposible to change priority of process %d: %s\n", pid, strerror(errno));
                 } else {
                         printf("Invalid number of arguments in command: 'priority'\n");
+                }
+        }
+}
+
+void MostrarEntorno (char **entorno, char * nombre_entorno) {
+        int i=0;
+        while (entorno[i]!=NULL) {
+                printf ("%p->%s[%d]=(%p) %s\n", &entorno[i], nombre_entorno, i,entorno[i],entorno[i]);
+                i++;
+        }
+}
+
+int BuscarVariable (char * var, char *e[]) {
+        int pos=0;
+        char aux[MAXVAR];
+        strcpy (aux,var);
+        strcat (aux,"=");
+        while (e[pos]!=NULL)
+                if (!strncmp(e[pos],aux,strlen(aux)))
+                        return (pos);
+                else
+                        pos++;
+        errno=ENOENT; /*no hay tal variable*/
+        return(-1);
+}
+
+int CambiarVariable(char * var, char * valor, char *e[]) {
+        int pos;
+        char *aux;
+        if ((pos=BuscarVariable(var,e))==-1)
+                return(-1);
+        if ((aux=(char *)malloc(strlen(var)+strlen(valor)+2))==NULL)
+                return -1;
+        strcpy(aux,var);
+        strcat(aux,"=");
+        strcat(aux,valor);
+        e[pos]=aux;
+        return (pos);
+}
+
+void fun_entorno(char * argmnt[], int aux, char *env[]) {
+        if(aux > 2) {
+                printf("Too much arguments in command 'entorno'");
+        } else {
+                if(aux == 1) {                                 //printea el array de enviroment por el tercer argumento del main
+                        MostrarEntorno(env, "main 3arg");
+                } else if(strcmp(argmnt[1], "-environ") == 0) {         //printea el array de enviroment por la variable externa environ
+                        MostrarEntorno(environ, "environ");
+                } else if(strcmp(argmnt[1], "-addr") == 0) {            //printea el valor de environ y el tercer argumento del main 
+                        printf("environ:\t%p (stored in %p)\n", environ, &environ);
+                        printf("main 3arg:\t%p (stored in %p)\n", env, &env);
+                } else {
+                        printf("Use: entorno [-environ|-addr]\n");
+                }
+        }
+}
+
+void fun_mostrarvar(char * argmnt[], int aux, char *env[]) {
+        if(aux == 1) {
+                MostrarEntorno(env, "main 3arg");
+        } else if(aux == 2) {
+                if(getenv(argmnt[1]) == NULL) {
+                        printf("Enviroment variable %s not found", argmnt[1]);
+                } else {
+                        int pos;
+                        pos = BuscarVariable(argmnt[1], env);
+                        printf("With arg3 main: %s (%p) %p\n", env[pos], env[pos], &env[pos]);
+                        printf("With environ: %s (%p) %p\n", environ[pos], environ[pos], &environ[pos]);
+                        printf("With getenv: %s=%s (%p)\n", argmnt[1], getenv(argmnt[1]), getenv(argmnt[1]));
+                }
+        } else {
+                printf("Invalid number of arguments in command: 'mostrarvar'\n");
+        }
+}
+
+void fun_cambiarvar(char * argmnt[], int aux, char *env[]) {
+        char a[MAXVAR];
+        if(aux < 3) {
+                printf("Use: cambiarvar [-a|-e|-p] VAR VALUE\n");
+        } else {
+                if(strcmp(argmnt[1], "-e") == 0) {
+                        CambiarVariable(argmnt[2], argmnt[3], environ);
+                } else if(strcmp(argmnt[1], "-a") == 0) {
+                        CambiarVariable(argmnt[2], argmnt[3], env);
+                } else if(strcmp(argmnt[1], "-p") == 0) {
+                        strcpy(a, argmnt[2]);
+                        strcat(a, "=");
+                        strcat(a, argmnt[3]);
+                        putenv(a);
+                } else {
+                        strcpy(a, argmnt[1]);
+                        strcat(a, "=");
+                        strcat(a, argmnt[2]);
+                        putenv(a);           
                 }
         }
 }
