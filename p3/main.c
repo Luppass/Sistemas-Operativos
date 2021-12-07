@@ -790,6 +790,15 @@ bool processComand(head_t * comandList, head_t * memoryList, char * petition, ch
         else if((strcmp(Command, "cambiarvar") == 0)){
             fun_cambiarvar(argument, aux, env);
         }
+        else if((strcmp(Command, "ejec") == 0)){
+            fun_ejec(argument, aux);
+        }
+        else if((strcmp(Command, "ejecpri") == 0)){
+            fun_ejecpri(argument, aux);
+        }
+        else if((strcmp(Command, "fork") == 0)){
+            fun_fork();
+        }
         else{
             fprintf(stderr, "Command: %s not found\n", Command);
         }

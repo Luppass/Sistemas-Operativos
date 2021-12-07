@@ -6,6 +6,7 @@
 #include <signal.h>
 #include <sys/resource.h>
 #include <errno.h>
+#include <unistd.h>
 #include "linkedList.h"
 #include "main.h"
 
@@ -280,5 +281,43 @@ void fun_cambiarvar(char * argmnt[], int aux, char *env[]) {
                         strcat(a, argmnt[2]);
                         putenv(a);           
                 }
+        }
+}
+
+void fun_ejec(char * argmnt[], int aux) {
+        if(aux > 1) {
+                if (execvp(argmnt[1], argmnt+1)==-1){
+                        printf("%s\n", strerror(errno));
+                }
+        } else {
+                printf("More arguments needed in comman: 'ejec'");
+        }
+}
+
+void fun_ejecpri(char * argmnt[], int aux) {
+        if(aux > 2) {
+                int which = PRIO_PROCESS;
+                id_t pid;
+                int prio;
+                pid = getpid();
+                prio = atoi(argmnt[1]);
+                if(setpriority(which, pid, prio) == -1)
+                        printf("Imposible to change priority of process %d: %s\n", pid, strerror(errno));
+                if (execvp(argmnt[2], argmnt+2)==-1){
+                        printf("%s\n", strerror(errno));
+                }
+        } else {
+                printf("More arguments needed in comman: 'ejecpri'");
+        }
+}
+
+void fun_fork(){
+        pid_t pid;
+        if(pid = fork() == -1){
+                printf("%s", strerror(errno));
+                return;
+        }
+        else {
+              waitpid(pid, 0, 0); 
         }
 }
