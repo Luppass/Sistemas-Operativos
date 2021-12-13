@@ -799,6 +799,21 @@ bool processComand(head_t * comandList, head_t * memoryList, char * petition, ch
         else if((strcmp(Command, "fork") == 0)){
             fun_fork();
         }
+        else if((strcmp(Command, "fg") == 0)){
+            fun_fg(argument, aux);
+        }
+        else if((strcmp(Command, "fgprio") == 0)){
+            fun_fgprio(argument, aux);
+        }
+        else if((strcmp(Command, "back") == 0)){
+            fun_back(argument, aux);
+        }
+        else if((strcmp(Command, "backprio") == 0)){
+            fun_backprio(argument, aux);
+        }
+        else if((strcmp(Command, "rederr") == 0)){
+            fun_rederr(argument, aux);
+        }
         else{
             fprintf(stderr, "Command: %s not found\n", Command);
         }

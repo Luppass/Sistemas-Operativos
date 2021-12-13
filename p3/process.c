@@ -7,6 +7,7 @@
 #include <sys/resource.h>
 #include <errno.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include "linkedList.h"
 #include "main.h"
 
@@ -90,6 +91,8 @@ static struct SEN sigstrnum[]={
 }; /*fin array sigstrnum*/
 
 extern char ** environ;
+
+extern FILE *stderr;
 
 int Senal(char * sen) {
         int i;
@@ -285,30 +288,24 @@ void fun_cambiarvar(char * argmnt[], int aux, char *env[]) {
 }
 
 void fun_ejec(char * argmnt[], int aux) {
-        if(aux > 1) {
-                if (execvp(argmnt[1], argmnt+1)==-1){
-                        printf("%s\n", strerror(errno));
-                }
-        } else {
-                printf("More arguments needed in comman: 'ejec'");
+        if (execvp(argmnt[1], argmnt+1)==-1){
+                printf("%s\n", strerror(errno));
         }
+
 }
 
 void fun_ejecpri(char * argmnt[], int aux) {
-        if(aux > 2) {
-                int which = PRIO_PROCESS;
-                id_t pid;
-                int prio;
-                pid = getpid();
-                prio = atoi(argmnt[1]);
-                if(setpriority(which, pid, prio) == -1)
-                        printf("Imposible to change priority of process %d: %s\n", pid, strerror(errno));
-                if (execvp(argmnt[2], argmnt+2)==-1){
-                        printf("%s\n", strerror(errno));
-                }
-        } else {
-                printf("More arguments needed in comman: 'ejecpri'");
-        }
+        int which = PRIO_PROCESS;
+        id_t pid = getpid();
+        int prio = atoi(argmnt[1]);
+        if(setpriority(which, pid, prio) == -1)
+                printf("Imposible to change priority of process %d: %s\n", pid, strerror(errno));
+        fun_ejec(argmnt+1, aux-1);
+}
+
+void fun_ejecas(char * argmnt[], int aux) {
+        CambiarUidLogin(argmnt[1]);
+        fun_ejec(argmnt+1, aux-1);
 }
 
 void fun_fork(){
@@ -319,5 +316,94 @@ void fun_fork(){
         }
         else {
               waitpid(pid, 0, 0); 
+        }
+}
+
+void fun_fg(char * argmnt[], int aux) {
+        int pid;
+
+        pid = fork();
+        
+        if(pid == -1) {
+                printf("%s", strerror(errno));
+                return;
+        }
+
+        if(pid == 0) {
+                if(execvp(argmnt[1], argmnt+1) == -1){
+                        printf("%s\n", strerror(errno));
+                }
+                exit(255);
+        }
+        waitpid(pid, NULL, 0);
+}
+
+void fun_fgprio(char * argmnt[], int aux) {
+        int which = PRIO_PROCESS;
+        id_t pid = getpid();
+        int prio = atoi(argmnt[1]);
+        if(setpriority(which, pid, prio) == -1)
+                printf("Imposible to change priority of process %d: %s\n", pid, strerror(errno));
+        fun_fg(argmnt+1, aux-1);
+}
+
+void fun_fgas(char * argmnt[], int aux) {
+        CambiarUidLogin(argmnt[1]);
+        fun_fg(argmnt+1, aux-1);
+}
+
+void fun_back(char * argmnt[], int aux) {
+        int pid;
+
+        pid = fork();
+        
+        if(pid == -1) {
+                printf("%s", strerror(errno));
+                return;
+        }
+
+        if(pid == 0) {
+                if(execvp(argmnt[1], argmnt+1) == -1){
+                        printf("%s\n", strerror(errno));
+                }
+                exit(255);
+        }
+        
+}
+
+void fun_backprio(char * argmnt[], int aux) {
+        int which = PRIO_PROCESS;
+        id_t pid = getpid();
+        int prio = atoi(argmnt[1]);
+        if(setpriority(which, pid, prio) == -1)
+                printf("Imposible to change priority of process %d: %s\n", pid, strerror(errno));
+        fun_back(argmnt+1, aux-1);
+}
+
+void fun_backas(char * argmnt[], int aux) {
+        CambiarUidLogin(argmnt[1]);
+        fun_back(argmnt+1, aux-1);
+}
+
+void fun_rederr(char * argmnt[], int aux) {
+        int fd, backup, status;
+
+        backup=dup(STDOUT_FILENO);
+        if(aux == 1) {
+                //Mustra a dónde está mandando el error estandar
+        } else {
+                if(strcmp(argmnt[1], "-reset") == 0) {
+                        //Resetea a donde se manda el error estandar
+                        close(STDERR_FILENO);
+                        dup(backup);
+                } else {
+                        //Nuevo file a donde se manda el error estandar 
+                        if ((fd=open(argmnt[1], O_CREAT|O_EXCL|O_WRONLY ,0777))==-1){
+                                perror("Unable to open target file for redirection");
+                                exit(0);
+                        }
+                        close(STDERR_FILENO);
+                        dup(fd);
+                }
         }
 }
